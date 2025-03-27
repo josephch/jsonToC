@@ -1,6 +1,5 @@
-#include <string.h>
-
 #include <algorithm>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -46,7 +45,6 @@ void parseJson(const cJSON *json, const std::string &structName) {
 }
 
 void writeStructs(std::ofstream &file) {
-	// Gather all #defines
 	file << "/* String Length Defines */\n";
 	for (const auto &structPair : structs) {
 		for (const auto &field : structPair.second) {
@@ -59,7 +57,6 @@ void writeStructs(std::ofstream &file) {
 	}
 	file << "\n";
 
-	// Write structs in order
 	for (const auto &structPair : structs) {
 		file << "typedef struct " << structPair.first << " {\n";
 		for (const auto &field : structPair.second) {
@@ -72,6 +69,37 @@ void writeStructs(std::ofstream &file) {
 			}
 		}
 		file << "} " << structPair.first << ";\n\n";
+	}
+}
+
+void writeParsingFunctions(std::ofstream &file) {
+	for (const auto &structPair : structs) {
+		std::string structName = structPair.first;
+
+		file << "void parse_" << structName << "(" << structName << " *obj, cJSON *json) {\n";
+		file << "    if (!obj || !json) return;\n\n";
+
+		for (const auto &field : structPair.second) {
+			if (field.type == "char") {
+				file << "    cJSON *item = cJSON_GetObjectItem(json, \"" << field.name << "\");\n";
+				file << "    if (cJSON_IsString(item) && (item->valuestring != NULL)) {\n";
+				file << "        strncpy(obj->" << field.name << ", item->valuestring, " << structName << "_" << field.name
+					 << "_LEN - 1);\n";
+				file << "        obj->" << field.name << "[" << structName << "_" << field.name << "_LEN - 1] = '\\0';\n";
+				file << "    }\n\n";
+			} else if (field.type == "int") {
+				file << "    cJSON *item = cJSON_GetObjectItem(json, \"" << field.name << "\");\n";
+				file << "    if (cJSON_IsNumber(item)) {\n";
+				file << "        obj->" << field.name << " = item->valueint;\n";
+				file << "    }\n\n";
+			} else {
+				file << "    cJSON *item = cJSON_GetObjectItem(json, \"" << field.name << "\");\n";
+				file << "    if (cJSON_IsObject(item)) {\n";
+				file << "        parse_" << field.type << "(&(obj->" << field.name << "), item);\n";
+				file << "    }\n\n";
+			}
+		}
+		file << "}\n\n";
 	}
 }
 
@@ -108,10 +136,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	writeStructs(file);
+	writeParsingFunctions(file);
 
 	file.close();
 	cJSON_Delete(json);
 
-	std::cout << "C structure written to " << outputFilename << "\n";
+	std::cout << "C code written to " << outputFilename << "\n";
 	return 0;
 }
