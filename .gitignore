@@ -1,0 +1,6 @@
+.cache/
+Json-To-C-Struct.depend
+bin/
+compile_commands.json
+obj/
+
