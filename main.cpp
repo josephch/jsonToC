@@ -125,7 +125,7 @@ void writeParsingFunctions(std::ofstream &file) {
 
 int main(int argc, char *argv[]) {
 	if (argc < 5) {
-		std::cerr << "Usage: " << argv[0] << " <json_input> <root name> <skip-level> <output_file>\n";
+		std::cerr << "Usage: " << argv[0] << " <json_input_file> <root structure name> <skip-level> <output_file>\n";
 		return 1;
 	}
 

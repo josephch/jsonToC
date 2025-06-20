@@ -23,7 +23,7 @@ Build after opening project in Code::Blocks
 
 ## Run
 ```
-./bin/jsonToC <json_input> <root name> <skip-level> <output_file>
+./bin/jsonToC <json_input_file> <root structure name> <skip-level> <output_file>
 ```
 
 ## Acknowledgments
